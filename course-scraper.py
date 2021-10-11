@@ -81,9 +81,8 @@ def parse_courses(soup, field_of_study_mapping):
                     ):
                         courses[code].append(
                             {
-                                # "Kurskod": code,
-                                "Kurskod": f'=HYPERLINK("https://liu.se/studieinfo/kurs/{code.lower()}", "{name}")',
-                                "Namn": name,
+                                "Kurskod": code,
+                                "Namn": f'=HYPERLINK("https://liu.se/studieinfo/kurs/{code.lower()}", "{name}")',
                                 "Hp": int(hp.replace("*", "")) / (hp.count("*") + 1),
                                 "Nivå": level,
                                 "Block": block.split("/") if "/" in block else [block],
