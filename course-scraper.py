@@ -40,34 +40,30 @@ def find_field_of_study_mappings(soup):
 @notify(prefix="Parsing 'courses.html'...", suffix=" done.")
 def parse_courses(soup, field_of_study_mapping):
     term_pattern = re.compile(r" \d\d? ")  # Matches either a single or two digits with whitespace on either side
-    specialisation_pattern = re.compile(
-        r"Inriktning:( [\w-]+)+"
-    )  # Matches groups of words beginning with a whitespace possibly separated
 
     courses = {}
 
     program = soup.find("div", class_="programplan")
-    for term in program.find_all("article"):
+        
+    for term in program.find_all("section"):
+        
         current_term = term_pattern.search(term.header.h3.text.strip()).group(0).strip()
-        for specialisation in term.main.find_all("div", class_="specialization"):
-            current_specialisation = (
-                (
-                    specialisation_pattern.search(specialisation.label.text.strip())
-                    .group(0)
-                    .removeprefix("Inriktning:")
-                    .strip()
-                )
-                if specialisation.label.text.strip() != ""
-                and specialisation.label.text.strip() != "Preliminära kurser"
-                else ""
-            )
-            for period in specialisation.find_all("tbody", class_="period"):
-                current_period = period.tr.th.text.strip().removeprefix("Period ")
+        
+        for specialisation in term.find_all("div", class_="specialization"):
+            
+            spec_text = specialisation.caption.span
+            current_specialisation = ' '.join(spec_text.text.split()[1:]) if spec_text else ''
+                        
+            for current_period, period in enumerate(specialisation.find_all("tbody", class_="period"), start=1):
+                
                 for course in period.find_all("tr", class_="main-row"):
+                    
                     fields_of_study = list(
                         map(lambda x: field_of_study_mapping[x], course["data-field-of-study"].split("|"))
                     )
+                    
                     code, name, hp, level, block, type_, _ = map(lambda x: x.text.strip(), course.find_all("td"))
+                    
                     if not code in courses:
                         courses[code] = []
 
@@ -101,6 +97,7 @@ def parse_courses(soup, field_of_study_mapping):
                                 course_variant["Inriktning"] = list([current_specialisation])
                             elif not current_specialisation in course_variant["Inriktning"]:
                                 course_variant["Inriktning"].extend(list([current_specialisation]))
+                                    
     return courses
 
 
